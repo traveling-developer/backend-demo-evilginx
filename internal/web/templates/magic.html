@@ -1,0 +1,24 @@
+{{define "title"}}E-Mail-Link{{end}}
+{{define "content"}}
+<h1>Anmelden per E-Mail-Link</h1>
+{{if .Submitted}}
+  <p>Falls ein Konto zu <strong>{{.Email}}</strong> existiert, wurde ein Anmeldelink versendet.</p>
+  {{if .Link}}
+  <div class="dev-panel">
+    <p class="dev-panel-title">Demo-Panel (kein echter Mailversand)</p>
+    <p>Anmeldelink:</p>
+    <a class="magic-link" href="{{.Link}}">{{.Link}}</a>
+  </div>
+  {{end}}
+  <div class="alt-methods"><a href="/login">Zurück</a></div>
+{{else}}
+  <p>Gib deine E-Mail-Adresse ein, wir senden dir einen einmaligen Anmeldelink.</p>
+  <form method="post" action="/login/magic">
+    <label>E-Mail
+      <input type="email" name="email" autocomplete="email" autofocus required>
+    </label>
+    <button type="submit">Link senden</button>
+  </form>
+  <div class="alt-methods"><a href="/login">Zurück</a></div>
+{{end}}
+{{end}}

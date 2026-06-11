@@ -1,0 +1,12 @@
+{{define "title"}}Passkey registrieren{{end}}
+{{define "content"}}
+<h1>Passkey registrieren</h1>
+<p>Angemeldet als <strong>{{.Username}}</strong>. Lege jetzt einen Passkey für dieses Konto an.</p>
+<p id="error" class="error" hidden></p>
+<button type="button" id="passkey-register">Passkey erstellen</button>
+<div class="alt-methods"><a href="/dashboard">Zum Dashboard</a></div>
+<script src="/static/webauthn.js"></script>
+<script>
+  document.getElementById('passkey-register').addEventListener('click', registerPasskey);
+</script>
+{{end}}

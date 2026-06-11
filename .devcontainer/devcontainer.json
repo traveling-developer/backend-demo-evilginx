@@ -1,0 +1,26 @@
+{
+	"name": "Go",
+	"image": "mcr.microsoft.com/devcontainers/go:2-1.26-trixie",
+	"features": {
+		"ghcr.io/devcontainers/features/go:1": {}
+	},
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"go.toolsManagement.checkForUpdates": "local",
+				"go.useLanguageServer": true,
+				"gopls": {
+					"ui.semanticTokens": true
+				}
+			},
+			"extensions": [
+				"golang.Go",
+				"redhat.vscode-yaml"
+			]
+		}
+	},
+	"runArgs": [
+		"--userns=keep-id:uid=1000,gid=1000"
+	],
+	"postCreateCommand": "curl -fsSL https://claude.ai/install.sh | bash"
+}

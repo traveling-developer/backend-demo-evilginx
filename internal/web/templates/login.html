@@ -1,0 +1,18 @@
+{{define "title"}}Anmelden{{end}}
+{{define "content"}}
+<h1>Anmelden</h1>
+{{if .Error}}<p class="error">Anmeldung fehlgeschlagen. Bitte erneut versuchen.</p>{{end}}
+<form method="post" action="/login">
+  <label>Benutzername
+    <input type="text" name="username" autocomplete="username" autofocus required>
+  </label>
+  <label>Passwort
+    <input type="password" name="password" autocomplete="current-password" required>
+  </label>
+  <button type="submit">Anmelden</button>
+</form>
+<div class="alt-methods">
+  <a href="/login/magic">Per E-Mail-Link anmelden</a>
+  <a href="/login/passkey">Mit Passkey anmelden</a>
+</div>
+{{end}}

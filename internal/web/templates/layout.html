@@ -1,0 +1,16 @@
+{{define "layout"}}<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{block "title" .}}{{.CorpName}}{{end}} · {{.CorpName}}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main class="card">
+    <div class="brand">{{.CorpName}}</div>
+    {{template "content" .}}
+  </main>
+  <footer class="demo-note">Demo-Umgebung für autorisierte Security-Schulungen.</footer>
+</body>
+</html>{{end}}

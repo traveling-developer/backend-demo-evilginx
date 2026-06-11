@@ -1,0 +1,13 @@
+{{define "title"}}Bestätigung{{end}}
+{{define "content"}}
+<h1>Zwei-Faktor-Bestätigung</h1>
+<p>Gib den 6-stelligen Code aus deiner Authenticator-App ein.</p>
+{{if .Error}}<p class="error">Code ungültig. Bitte erneut versuchen.</p>{{end}}
+<form method="post" action="/login/totp">
+  <label>Code
+    <input type="text" name="code" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autofocus required>
+  </label>
+  <button type="submit">Bestätigen</button>
+</form>
+<div class="alt-methods"><a href="/login">Abbrechen</a></div>
+{{end}}
