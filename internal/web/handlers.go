@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/inovex/backend-demo-evilginx/internal/auth"
+	"github.com/inovex/backend-demo-evilginx/internal/store"
 )
-
-const magicLinkTTL = 10 * time.Minute
 
 // handleIndex shows the landing page, or sends logged-in users to the dashboard.
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
@@ -68,39 +68,82 @@ func (s *Server) handleTOTPPost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
 
-func (s *Server) handleMagicGet(w http.ResponseWriter, r *http.Request) {
-	s.render(w, "magic", nil)
+// --- Passwordless push approval (number matching) ---
+
+func (s *Server) handlePushGet(w http.ResponseWriter, r *http.Request) {
+	s.render(w, "push", map[string]any{"Stage": "form"})
 }
 
-// handleMagicPost issues a single-use login link. There is no mail server in the
-// demo, so the link is logged server-side AND shown on the page (a "dev panel").
-// Showing it on the page is deliberate: it keeps the whole flow inside the
-// proxied session so Evilginx can capture the resulting session cookie. See
-// README for the OTP-on-page vs real-email nuance.
-func (s *Server) handleMagicPost(w http.ResponseWriter, r *http.Request) {
-	email := r.FormValue("email")
-	data := map[string]any{"Submitted": true, "Email": email}
+// handlePushPost creates a push approval request and shows the waiting page with
+// the match number. The same page renders whether or not the username exists, so
+// we don't leak which accounts are valid; an unknown user simply gets a request
+// that is never approved.
+func (s *Server) handlePushPost(w http.ResponseWriter, r *http.Request) {
+	username := r.FormValue("username")
+	data := map[string]any{"Stage": "waiting", "Username": username}
 
-	if u, ok := s.Store.UserByEmail(email); ok {
-		t := s.Store.CreateMagicToken(u.ID, magicLinkTTL)
-		link := s.BaseURL + "/login/magic/verify?token=" + t.Token
-		log.Printf("magic link for %s: %s", email, link)
-		data["Link"] = link
+	if u, ok := s.Store.UserByName(username); ok {
+		match := s.Auth.BeginPush(w, u)
+		data["Match"] = match
+		log.Printf("push approval request for %s: match number %02d", username, match)
+	} else {
+		data["Match"] = auth.NewMatchNumber()
 	}
-	// Always render the same "if the address exists, a link was sent" page to
-	// avoid leaking which emails are valid.
-	s.render(w, "magic", data)
+	s.render(w, "push", data)
 }
 
-func (s *Server) handleMagicVerify(w http.ResponseWriter, r *http.Request) {
-	token := r.URL.Query().Get("token")
-	userID, ok := s.Store.ConsumeMagicToken(token)
+// handlePushStatus is polled by the waiting page. On approval it completes the
+// login (setting the demo_session cookie) — the exact token an AitM proxy grabs.
+func (s *Server) handlePushStatus(w http.ResponseWriter, r *http.Request) {
+	req, ok := s.Auth.PendingPush(r)
 	if !ok {
-		http.Redirect(w, r, "/login?error=magic", http.StatusSeeOther)
+		writeJSON(w, http.StatusOK, map[string]string{"status": "expired"})
 		return
 	}
-	s.Auth.CompleteLogin(w, userID)
-	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+	switch req.Status {
+	case store.PushApproved:
+		s.Auth.ClearPush(w, r)
+		s.Auth.CompleteLogin(w, req.UserID)
+		writeJSON(w, http.StatusOK, map[string]string{"status": "approved", "redirect": "/dashboard"})
+	case store.PushDenied:
+		s.Auth.ClearPush(w, r)
+		writeJSON(w, http.StatusOK, map[string]string{"status": "denied"})
+	default:
+		writeJSON(w, http.StatusOK, map[string]string{"status": "pending"})
+	}
+}
+
+// handleAuthenticatorGet renders the simulated authenticator: it stands in for
+// an app on a second device, listing pending requests with number-matching.
+func (s *Server) handleAuthenticatorGet(w http.ResponseWriter, r *http.Request) {
+	reqs := s.Store.PendingPushRequests()
+	views := make([]map[string]any, 0, len(reqs))
+	for _, req := range reqs {
+		views = append(views, map[string]any{
+			"ID":       req.ID,
+			"Username": req.Username,
+			"Choices":  auth.NumberChoices(req.MatchNumber),
+		})
+	}
+	s.render(w, "authenticator", map[string]any{"Requests": views})
+}
+
+// handleAuthenticatorApprove records the decision. Picking the wrong number
+// denies the request, mirroring real number-matching.
+func (s *Server) handleAuthenticatorApprove(w http.ResponseWriter, r *http.Request) {
+	id := r.FormValue("id")
+	number, _ := strconv.Atoi(r.FormValue("number"))
+
+	if req, ok := s.Store.PushByID(id); ok && req.Status == store.PushPending && time.Now().Before(req.ExpiresAt) {
+		if number == req.MatchNumber {
+			s.Store.SetPushStatus(id, store.PushApproved)
+			log.Printf("push %s approved for %s", id, req.Username)
+		} else {
+			s.Store.SetPushStatus(id, store.PushDenied)
+			log.Printf("push %s denied for %s (wrong number)", id, req.Username)
+		}
+	}
+	http.Redirect(w, r, "/authenticator", http.StatusSeeOther)
 }
 
 func (s *Server) handlePasskeyGet(w http.ResponseWriter, r *http.Request) {

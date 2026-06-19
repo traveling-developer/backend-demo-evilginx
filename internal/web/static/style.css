@@ -101,17 +101,6 @@ code {
   font-size: 0.85em;
 }
 
-.dev-panel {
-  margin-top: 1rem;
-  padding: 1rem;
-  border: 1px dashed var(--accent);
-  border-radius: 8px;
-  background: #eff6ff;
-}
-
-.dev-panel-title { font-weight: 700; color: var(--accent); margin: 0 0 0.5rem; }
-.magic-link { word-break: break-all; font-size: 0.85rem; }
-
 .methods {
   display: flex;
   flex-direction: column;
@@ -135,3 +124,40 @@ code {
 .method-desc { font-size: 0.85rem; color: var(--muted); }
 
 .demo-note { color: #94a3b8; font-size: 0.8rem; }
+
+.muted { color: var(--muted); }
+
+/* Passwordless push / number matching */
+.match-number {
+  font-size: 2.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-align: center;
+  margin: 1rem 0;
+  color: var(--accent);
+}
+
+.push-request {
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+}
+
+.number-choices {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.number-choices form { flex: 1; margin: 0; }
+
+.number-choice {
+  width: 100%;
+  margin: 0;
+  background: #e2e8f0;
+  color: var(--text);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.number-choice:hover { background: var(--accent); color: #fff; }

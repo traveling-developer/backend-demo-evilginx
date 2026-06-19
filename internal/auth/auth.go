@@ -1,6 +1,6 @@
-// Package auth implements the demo's login flows: password, TOTP, magic link
-// and WebAuthn. Sessions are tracked with an HttpOnly cookie — the exact
-// auth_token an Evilginx phishlet is configured to capture.
+// Package auth implements the demo's login flows: password, TOTP, passwordless
+// push approval and WebAuthn. Sessions are tracked with an HttpOnly cookie — the
+// exact auth_token an Evilginx phishlet is configured to capture.
 package auth
 
 import (
@@ -14,6 +14,7 @@ import (
 const (
 	SessionCookie  = "demo_session"
 	pendingCookie  = "demo_pending"
+	pushCookie     = "demo_push"
 	ceremonyCookie = "demo_waceremony"
 	contextUserKey = ctxKey("user")
 )

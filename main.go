@@ -1,7 +1,7 @@
 // Command backend-demo-evilginx is a self-contained demo login site used as the
 // TARGET application in an authorized Evilginx (adversary-in-the-middle)
-// demonstration. It supports password login (with optional TOTP MFA), magic-link
-// passwordless login, and WebAuthn/passkey login.
+// demonstration. It supports password login (with optional TOTP MFA),
+// passwordless push approval (number matching), and WebAuthn/passkey login.
 //
 // Use only in isolated, authorized security training environments.
 package main
@@ -37,7 +37,6 @@ func main() {
 	}
 
 	var (
-		baseURL   = env("BASE_URL", "http://localhost:8080")
 		rpID      = env("WEBAUTHN_RPID", "localhost")
 		rpOrigin  = env("WEBAUTHN_ORIGIN", "http://localhost:8080")
 		corpName  = env("CORP_NAME", "DemoCorp")
@@ -61,10 +60,10 @@ func main() {
 	}
 
 	a := &auth.Auth{Store: st, WebAuthn: wa, Secure: behindTLS}
-	srv := web.NewServer(a, st, baseURL, corpName)
+	srv := web.NewServer(a, st, corpName)
 
 	log.Printf("=== %s demo login backend ===", corpName)
-	log.Printf("listening on %s (base URL %s)", listenAddr, baseURL)
+	log.Printf("listening on %s", listenAddr)
 	log.Printf("webauthn RPID=%s origin=%s  | cookies Secure=%t", rpID, rpOrigin, behindTLS)
 	for _, n := range notes {
 		log.Printf("seed: %s", n)

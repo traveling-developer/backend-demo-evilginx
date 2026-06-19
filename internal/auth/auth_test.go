@@ -26,24 +26,47 @@ func TestTOTPRoundTrip(t *testing.T) {
 	}
 }
 
-func TestMagicTokenSingleUse(t *testing.T) {
-	s := store.New()
-	s.AddUser(&store.User{ID: "u1", Username: "alice", Email: "a@x"})
-
-	tok := s.CreateMagicToken("u1", time.Minute)
-	if id, ok := s.ConsumeMagicToken(tok.Token); !ok || id != "u1" {
-		t.Fatalf("first consume failed: id=%q ok=%v", id, ok)
+func TestNumberChoices(t *testing.T) {
+	const match = 42
+	choices := auth.NumberChoices(match)
+	if len(choices) != 3 {
+		t.Fatalf("want 3 choices, got %d", len(choices))
 	}
-	if _, ok := s.ConsumeMagicToken(tok.Token); ok {
-		t.Fatal("token reused — should be single-use")
+	seen := map[int]bool{}
+	found := false
+	for _, c := range choices {
+		if seen[c] {
+			t.Fatalf("duplicate choice %d", c)
+		}
+		seen[c] = true
+		if c == match {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("match number not among choices")
 	}
 }
 
-func TestMagicTokenExpiry(t *testing.T) {
+func TestPushRequestLifecycle(t *testing.T) {
 	s := store.New()
-	s.AddUser(&store.User{ID: "u1"})
-	tok := s.CreateMagicToken("u1", -time.Second) // already expired
-	if _, ok := s.ConsumeMagicToken(tok.Token); ok {
-		t.Fatal("expired token accepted")
+	req := s.CreatePushRequest("u1", "alice", 42, time.Minute)
+	if got := s.PendingPushRequests(); len(got) != 1 {
+		t.Fatalf("want 1 pending request, got %d", len(got))
+	}
+	s.SetPushStatus(req.ID, store.PushApproved)
+	if got := s.PendingPushRequests(); len(got) != 0 {
+		t.Fatal("approved request should no longer be pending")
+	}
+	if r, ok := s.PushByID(req.ID); !ok || r.Status != store.PushApproved {
+		t.Fatalf("approval not recorded: ok=%v", ok)
+	}
+}
+
+func TestPushRequestExpiry(t *testing.T) {
+	s := store.New()
+	s.CreatePushRequest("u1", "alice", 42, -time.Second) // already expired
+	if got := s.PendingPushRequests(); len(got) != 0 {
+		t.Fatal("expired request should not be pending")
 	}
 }

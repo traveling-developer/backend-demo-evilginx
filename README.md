@@ -6,8 +6,9 @@ autorisierten [Evilginx](https://github.com/kgretzky/evilginx2)-Demo
 Login-Verfahren sich phishen lassen und welche nicht**.
 
 > ⚠️ **Nur für autorisierte, isolierte Security-Schulungen.** Dieses Backend ist
-> bewusst unsicher konfiguriert (Demo-Passwörter, In-Memory-State, On-Page-Magic-
-> Links). Nicht produktiv und nicht in fremden Umgebungen einsetzen.
+> bewusst unsicher konfiguriert (Demo-Passwörter, In-Memory-State, simulierter
+> On-Page-Authenticator). Nicht produktiv und nicht in fremden Umgebungen
+> einsetzen.
 
 ## Login-Verfahren & Lerneffekt
 
@@ -15,7 +16,7 @@ Login-Verfahren sich phishen lassen und welche nicht**.
 |---|---|---|---|
 | Passwort | `alice` | ✅ ja | Credentials + Session-Cookie werden im Proxy abgegriffen |
 | Passwort + TOTP-MFA | `bob` | ✅ ja | MFA-Bypass: der **Session-Cookie** wird gestohlen, der Code ist nur Einmal-Hürde |
-| Magic-Link (passwordless) | alle | ⚠️ bedingt | siehe Hinweis unten |
+| Authenticator-Push + Number-Matching (passwordless) | alle | ✅ ja | Number-Matching verhindert nur blindes Wegklicken (MFA-Fatigue), **nicht** den Proxy — der `demo_session`-Cookie wird trotzdem abgegriffen |
 | WebAuthn / Passkey | `carol`* | ❌ nein | **Origin-Binding** — der Browser bindet den Passkey an die echte Domain |
 
 \* `carol` muss ihren Passkey zuerst registrieren (siehe unten).
@@ -56,7 +57,6 @@ Demo-Passwort für alle User: `Password123!`
 | Variable | Default | Zweck |
 |---|---|---|
 | `LISTEN_ADDR` | `:8080` | Listen-Adresse |
-| `BASE_URL` | `http://localhost:8080` | externe URL, für Magic-Links |
 | `WEBAUTHN_RPID` | `localhost` | WebAuthn Relying-Party-ID (die **legitime** Domain) |
 | `WEBAUTHN_ORIGIN` | `http://localhost:8080` | erwartete Origin für Passkeys |
 | `CORP_NAME` | `DemoCorp` | Anzeigename im UI |
@@ -66,7 +66,6 @@ Demo-Passwort für alle User: `Password123!`
 Für einen realistischen Aufbau das Backend hinter eine TLS-Domain stellen, z. B.:
 
 ```bash
-BASE_URL=https://login.democorp.example \
 WEBAUTHN_RPID=login.democorp.example \
 WEBAUTHN_ORIGIN=https://login.democorp.example \
 BEHIND_TLS=1 go run .
@@ -82,18 +81,24 @@ WebAuthn braucht einen echten oder virtuellen Authenticator:
      authenticator* aktivieren.
 3. Danach unter `/login/passkey` mit Benutzername + Passkey anmelden.
 
-## Magic-Link-Hinweis (didaktisch wichtig)
+## Authenticator-Push / Number-Matching (didaktisch wichtig)
 
-Es gibt **keinen Mailserver**: Der Link wird ins Server-Log und in ein Dev-Panel
-auf der Seite geschrieben. Das ist Absicht.
+Passwortloses Login per Push-Bestätigung (wie beim **Microsoft Authenticator**):
 
-- Ein per **echter E-Mail** versendeter Link zeigt auf die **echte** Domain.
-  Klickt das Opfer aus dem Postfach, landet es nicht im Proxy → Evilginx greift
-  nichts ab.
-- Phishbar wird der Flow, wenn das Token **innerhalb der proxied Session**
-  konsumiert wird (Link/Code wird auf der Seite angezeigt — wie bei
-  OTP-Eingabe). Genau das bildet das On-Page-Dev-Panel ab: Evilginx erfasst den
-  resultierenden `demo_session`-Cookie.
+1. Nutzer gibt unter `/login/push` nur den **Benutzernamen** ein.
+2. Die Seite zeigt eine **2-stellige Zahl** und pollt auf Freigabe.
+3. Es gibt **kein echtes Push** (kein FCM/APNS, keine App). Stattdessen
+   simuliert die Seite `/authenticator` das zweite Gerät: Sie listet offene
+   Anfragen mit drei Zahlen — die passende antippen gibt frei, eine falsche
+   lehnt ab (echtes Number-Matching-Verhalten).
+4. Nach Freigabe setzt der Server den `demo_session`-Cookie → Dashboard.
+
+> **Lerneffekt:** Number-Matching schützt gegen *MFA-Fatigue* (blindes
+> Wegklicken zufälliger Prompts), **nicht** gegen AitM. Hinter Evilginx zeigt
+> der Proxy dem Opfer die Login-Seite samt Zahl; das Opfer bestätigt auf seinem
+> echten Gerät genau die angezeigte Zahl — und der Proxy fängt den
+> resultierenden Session-Cookie ab. Damit steht das Verfahren wie Passwort und
+> TOTP in der „phishbar"-Spalte, im Gegensatz zu Passkeys.
 
 ## Evilginx-Setup (Kurzfassung)
 
@@ -121,8 +126,8 @@ markiert.
    Cookie in Evilginx importieren → Session übernommen, ohne Passwort.
 2. **`bob`** (Passwort + TOTP) anmelden → trotz MFA wird der Session-Cookie
    abgegriffen → MFA-Bypass sichtbar.
-3. **Magic-Link** für eine Demo-Adresse anfordern → Capture zeigen + Nuance
-   echte E-Mail vs. On-Page erklären.
+3. **Authenticator-Push** anfordern → auf `/authenticator` die Zahl bestätigen.
+   Trotz Number-Matching landet der Session-Cookie im Proxy.
 4. **`carol`** mit Passkey → Anmeldung über die Phishing-Domain **schlägt fehl**
    (Origin-Mismatch). Kernbotschaft: *Passkeys/FIDO2 schützen vor AitM-Phishing.*
 
@@ -150,7 +155,6 @@ Google Cloud / AWS Free-Tier-VM (zeitlich begrenzt).
    ```
 3. Backend mit den passenden ENV-Variablen starten:
    ```bash
-   BASE_URL=https://login.deine-domain.tld \
    WEBAUTHN_RPID=login.deine-domain.tld \
    WEBAUTHN_ORIGIN=https://login.deine-domain.tld \
    BEHIND_TLS=1 ./demo
@@ -163,7 +167,7 @@ Google Cloud / AWS Free-Tier-VM (zeitlich begrenzt).
 Container-Deploy via `Dockerfile` auf **Google Cloud Run**, **Render** oder
 **Koyeb** (gratis, Auto-HTTPS, eigene Domain, skaliert auf null). Die App
 honoriert die `PORT`-Variable automatisch. Custom Domain auf das Backend mappen
-und dieselben `WEBAUTHN_*`/`BASE_URL`-Variablen setzen.
+und dieselben `WEBAUTHN_*`-Variablen setzen.
 
 ### C) Komplett lokal (am günstigsten & sichersten)
 
@@ -181,8 +185,8 @@ Exposition.
 ```
 main.go                 # Bootstrap: Config (ENV), Router, Server
 internal/
-  store/                # In-Memory-State (Users, Sessions, Magic-Tokens, Passkeys)
-  auth/                 # Login-Flows: session, password, totp, webauthn (+ Tests)
+  store/                # In-Memory-State (Users, Sessions, Push-Requests, Passkeys)
+  auth/                 # Login-Flows: session, password, totp, push, webauthn (+ Tests)
   web/                  # HTTP-Handler, Templates, Static-Assets
 phishlets/demo.yaml     # Beispiel-Evilginx-Phishlet
 ```
@@ -193,4 +197,4 @@ phishlets/demo.yaml     # Beispiel-Evilginx-Phishlet
 go test ./...
 ```
 
-Deckt TOTP-Roundtrip und Magic-Token-Semantik (Single-Use, Ablauf) ab.
+Deckt TOTP-Roundtrip und die Push-Semantik (Number-Matching, Lifecycle, Ablauf) ab.

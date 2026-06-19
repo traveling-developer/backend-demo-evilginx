@@ -1,0 +1,26 @@
+{{define "title"}}Authenticator{{end}}
+{{define "content"}}
+<h1>Authenticator</h1>
+<p class="muted">Simulated authenticator app. This stands in for a real app on a second device (e.g. Microsoft Authenticator).</p>
+{{if .Requests}}
+  {{range .Requests}}
+  <div class="push-request">
+    <p>Approve sign-in for <strong>{{.Username}}</strong>?</p>
+    <p class="muted">Tap the number shown on your sign-in screen:</p>
+    <div class="number-choices">
+      {{$id := .ID}}
+      {{range .Choices}}
+      <form method="post" action="/authenticator/approve">
+        <input type="hidden" name="id" value="{{$id}}">
+        <input type="hidden" name="number" value="{{.}}">
+        <button type="submit" class="number-choice">{{printf "%02d" .}}</button>
+      </form>
+      {{end}}
+    </div>
+  </div>
+  {{end}}
+{{else}}
+  <p class="muted">No pending requests.</p>
+{{end}}
+<div class="alt-methods"><a href="/">Home</a></div>
+{{end}}

@@ -1,0 +1,40 @@
+{{define "title"}}Authenticator{{end}}
+{{define "content"}}
+<h1>Sign in with your authenticator</h1>
+{{if eq .Stage "form"}}
+<p>Enter your username. We'll send an approval request to your authenticator app — no password needed.</p>
+<form method="post" action="/login/push">
+  <label>Username
+    <input type="text" name="username" autocomplete="username" autofocus required>
+  </label>
+  <button type="submit">Send request</button>
+</form>
+<div class="alt-methods"><a href="/login">Back</a></div>
+{{else}}
+<p>Approval request sent. Open your authenticator app and tap the number below to confirm it's you.</p>
+<div class="match-number">{{printf "%02d" .Match}}</div>
+<p id="push-status" class="muted">Waiting for approval…</p>
+<div class="alt-methods"><a href="/login">Cancel</a></div>
+<script>
+  const poll = setInterval(async () => {
+    let data;
+    try {
+      const res = await fetch('/login/push/status');
+      data = await res.json();
+    } catch (e) {
+      return; // transient; keep polling
+    }
+    if (data.status === 'approved') {
+      clearInterval(poll);
+      window.location = data.redirect;
+    } else if (data.status === 'denied') {
+      clearInterval(poll);
+      document.getElementById('push-status').textContent = 'Request denied.';
+    } else if (data.status === 'expired') {
+      clearInterval(poll);
+      document.getElementById('push-status').textContent = 'Request expired. Please try again.';
+    }
+  }, 1500);
+</script>
+{{end}}
+{{end}}
