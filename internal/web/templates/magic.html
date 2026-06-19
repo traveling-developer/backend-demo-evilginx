@@ -1,24 +1,24 @@
-{{define "title"}}E-Mail-Link{{end}}
+{{define "title"}}Email link{{end}}
 {{define "content"}}
-<h1>Anmelden per E-Mail-Link</h1>
+<h1>Sign in with an email link</h1>
 {{if .Submitted}}
-  <p>Falls ein Konto zu <strong>{{.Email}}</strong> existiert, wurde ein Anmeldelink versendet.</p>
+  <p>If an account exists for <strong>{{.Email}}</strong>, a sign-in link has been sent.</p>
   {{if .Link}}
   <div class="dev-panel">
-    <p class="dev-panel-title">Demo-Panel (kein echter Mailversand)</p>
-    <p>Anmeldelink:</p>
+    <p class="dev-panel-title">Demo panel (no real email is sent)</p>
+    <p>Sign-in link:</p>
     <a class="magic-link" href="{{.Link}}">{{.Link}}</a>
   </div>
   {{end}}
-  <div class="alt-methods"><a href="/login">Zurück</a></div>
+  <div class="alt-methods"><a href="/login">Back</a></div>
 {{else}}
-  <p>Gib deine E-Mail-Adresse ein, wir senden dir einen einmaligen Anmeldelink.</p>
+  <p>Enter your email address and we'll send you a one-time sign-in link.</p>
   <form method="post" action="/login/magic">
-    <label>E-Mail
+    <label>Email
       <input type="email" name="email" autocomplete="email" autofocus required>
     </label>
-    <button type="submit">Link senden</button>
+    <button type="submit">Send link</button>
   </form>
-  <div class="alt-methods"><a href="/login">Zurück</a></div>
+  <div class="alt-methods"><a href="/login">Back</a></div>
 {{end}}
 {{end}}

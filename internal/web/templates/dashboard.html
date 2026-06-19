@@ -1,16 +1,16 @@
 {{define "title"}}Dashboard{{end}}
 {{define "content"}}
-<h1>Willkommen, {{.Username}}</h1>
-<p class="success">Du bist angemeldet. Die Session läuft über das Cookie <code>demo_session</code> — genau dieses Token greift ein AitM-Proxy wie Evilginx ab.</p>
+<h1>Welcome, {{.Username}}</h1>
+<p class="success">You are signed in. The session is carried by the <code>demo_session</code> cookie — this is exactly the token an AitM proxy like Evilginx captures.</p>
 <ul class="account">
-  <li>E-Mail: {{.Email}}</li>
-  <li>TOTP-MFA: {{if .HasTOTP}}aktiv{{else}}nicht eingerichtet{{end}}</li>
-  <li>Registrierte Passkeys: {{.PasskeyCount}}</li>
+  <li>Email: {{.Email}}</li>
+  <li>TOTP MFA: {{if .HasTOTP}}enabled{{else}}not set up{{end}}</li>
+  <li>Registered passkeys: {{.PasskeyCount}}</li>
 </ul>
 <div class="alt-methods">
-  <a href="/register/passkey">Passkey registrieren</a>
+  <a href="/register/passkey">Register a passkey</a>
 </div>
 <form method="post" action="/logout">
-  <button type="submit" class="secondary">Abmelden</button>
+  <button type="submit" class="secondary">Sign out</button>
 </form>
 {{end}}

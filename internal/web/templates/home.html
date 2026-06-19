@@ -1,19 +1,19 @@
-{{define "title"}}Willkommen{{end}}
+{{define "title"}}Welcome{{end}}
 {{define "content"}}
-<h1>Willkommen bei {{.CorpName}}</h1>
-<p>Melde dich an, um auf dein Konto zuzugreifen. Wähle eine Methode:</p>
+<h1>Welcome to {{.CorpName}}</h1>
+<p>Sign in to access your account. Choose a method:</p>
 <div class="methods">
   <a class="method" href="/login">
-    <span class="method-title">Passwort</span>
-    <span class="method-desc">Benutzername &amp; Passwort (optional mit 2FA)</span>
+    <span class="method-title">Password</span>
+    <span class="method-desc">Username &amp; password (optionally with 2FA)</span>
   </a>
   <a class="method" href="/login/magic">
-    <span class="method-title">E-Mail-Link</span>
-    <span class="method-desc">Einmaliger Anmeldelink per E-Mail</span>
+    <span class="method-title">Email link</span>
+    <span class="method-desc">One-time sign-in link via email</span>
   </a>
   <a class="method" href="/login/passkey">
     <span class="method-title">Passkey</span>
-    <span class="method-desc">Anmeldung mit FIDO2 / WebAuthn</span>
+    <span class="method-desc">Sign in with FIDO2 / WebAuthn</span>
   </a>
 </div>
 {{end}}

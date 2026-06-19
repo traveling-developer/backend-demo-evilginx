@@ -32,7 +32,7 @@ async function registerPasskey() {
 
   const beginRes = await fetch("/webauthn/register/begin", { method: "POST" });
   if (!beginRes.ok) {
-    showError("Registrierung konnte nicht gestartet werden.");
+    showError("Could not start registration.");
     return;
   }
   const options = (await beginRes.json()).publicKey;
@@ -46,7 +46,7 @@ async function registerPasskey() {
   try {
     cred = await navigator.credentials.create({ publicKey: options });
   } catch (e) {
-    showError("Passkey-Erstellung abgebrochen: " + e.message);
+    showError("Passkey creation cancelled: " + e.message);
     return;
   }
 
@@ -68,7 +68,7 @@ async function registerPasskey() {
   if (finRes.ok) {
     window.location = (await finRes.json()).redirect;
   } else {
-    showError("Registrierung fehlgeschlagen.");
+    showError("Registration failed.");
   }
 }
 
@@ -84,7 +84,7 @@ async function loginPasskey() {
   });
   if (!beginRes.ok) {
     const err = await beginRes.json().catch(() => ({}));
-    showError(err.error || "Kein Passkey für diesen Benutzer.");
+    showError(err.error || "No passkey for this user.");
     return;
   }
   const options = (await beginRes.json()).publicKey;
@@ -97,7 +97,7 @@ async function loginPasskey() {
   try {
     assertion = await navigator.credentials.get({ publicKey: options });
   } catch (e) {
-    showError("Passkey-Anmeldung abgebrochen: " + e.message);
+    showError("Passkey sign-in cancelled: " + e.message);
     return;
   }
 
@@ -125,8 +125,8 @@ async function loginPasskey() {
   } else {
     // Expected behind a phishing proxy: the page origin won't match the RP origin.
     showError(
-      "Passkey-Anmeldung fehlgeschlagen. Hinweis: Hinter einem Phishing-Proxy " +
-        "schlägt das absichtlich fehl (Origin-Bindung).",
+      "Passkey sign-in failed. Note: behind a phishing proxy this fails " +
+        "intentionally (origin binding).",
     );
   }
 }
