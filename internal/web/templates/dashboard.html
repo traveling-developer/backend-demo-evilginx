@@ -1,7 +1,7 @@
 {{define "title"}}Dashboard{{end}}
 {{define "content"}}
 <h1>Welcome, {{.Username}}</h1>
-<p class="success">You are signed in. The session is carried by the <code>demo_session</code> cookie — this is exactly the token an AitM proxy like Evilginx captures.</p>
+<p class="success">You are signed in.</p>
 <ul class="account">
   <li>Email: {{.Email}}</li>
   <li>TOTP MFA: {{if .HasTOTP}}enabled{{else}}not set up{{end}}</li>

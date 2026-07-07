@@ -36,7 +36,7 @@ geseedet und u. a. das **TOTP-Secret von `bob`** ins Log geschrieben:
 
 ```
 seed: bob TOTP secret: JBSWY3DPEHPK3PXP
-seed: bob TOTP otpauth URL: otpauth://totp/DemoCorp:bob@democorp.example?...&secret=...
+seed: bob TOTP otpauth URL: otpauth://totp/DemoCorp:bob@gmail.com?...&secret=...
 ```
 
 In eine Authenticator-App (Google/Microsoft Authenticator, Aegis, …) bekommst du
@@ -66,8 +66,8 @@ Demo-Passwort für alle User: `Password123!`
 Für einen realistischen Aufbau das Backend hinter eine TLS-Domain stellen, z. B.:
 
 ```bash
-WEBAUTHN_RPID=login.democorp.example \
-WEBAUTHN_ORIGIN=https://login.democorp.example \
+WEBAUTHN_RPID=login.my-domain.com \
+WEBAUTHN_ORIGIN=https://login.my-domain.com \
 BEHIND_TLS=1 go run .
 ```
 
@@ -108,7 +108,7 @@ Passwortloses Login per Push-Bestätigung (wie beim **Microsoft Authenticator**)
    ```
    config domain <deine-phishing-domain>
    config ipv4 <server-ip>
-   phishlets hostname democorp login.democorp.example
+   phishlets hostname democorp login.my-domain.com
    phishlets enable democorp
    lures create democorp
    lures get-url 0

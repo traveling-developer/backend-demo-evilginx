@@ -29,13 +29,13 @@ func Seed(s *Store, issuer, bobSecret string) ([]string, error) {
 
 	var notes []string
 
-	s.AddUser(&User{ID: "u-alice", Username: "alice", Email: "alice@democorp.example", PasswordHash: hash})
+	s.AddUser(&User{ID: "u-alice", Username: "alice", Email: "alice@gmail.com", PasswordHash: hash})
 
 	// bob has TOTP enrolled. Use the fixed secret if provided, otherwise generate
 	// one. Either way, surface the secret + otpauth URL so it can be added to an
 	// authenticator app for the demo.
 	if bobSecret == "" {
-		key, err := totp.Generate(totp.GenerateOpts{Issuer: issuer, AccountName: "bob@democorp.example"})
+		key, err := totp.Generate(totp.GenerateOpts{Issuer: issuer, AccountName: "bob@gmail.com"})
 		if err != nil {
 			return nil, err
 		}
@@ -44,7 +44,7 @@ func Seed(s *Store, issuer, bobSecret string) ([]string, error) {
 	if _, err := totp.GenerateCode(bobSecret, time.Now()); err != nil {
 		return nil, fmt.Errorf("invalid TOTP_BOB_SECRET (must be base32): %w", err)
 	}
-	otpauthURL := fmt.Sprintf("otpauth://totp/%s:bob@democorp.example?%s",
+	otpauthURL := fmt.Sprintf("otpauth://totp/%s:bob@gmail.com?%s",
 		url.PathEscape(issuer),
 		url.Values{
 			"secret":    {bobSecret},
@@ -53,13 +53,13 @@ func Seed(s *Store, issuer, bobSecret string) ([]string, error) {
 			"digits":    {"6"},
 			"period":    {"30"},
 		}.Encode())
-	s.AddUser(&User{ID: "u-bob", Username: "bob", Email: "bob@democorp.example", PasswordHash: hash, TOTPSecret: bobSecret})
+	s.AddUser(&User{ID: "u-bob", Username: "bob", Email: "bob@gmail.com", PasswordHash: hash, TOTPSecret: bobSecret})
 	notes = append(notes,
 		fmt.Sprintf("bob TOTP secret: %s", bobSecret),
 		fmt.Sprintf("bob TOTP otpauth URL: %s", otpauthURL),
 	)
 
-	s.AddUser(&User{ID: "u-carol", Username: "carol", Email: "carol@democorp.example", PasswordHash: hash})
+	s.AddUser(&User{ID: "u-carol", Username: "carol", Email: "carol@gmail.com", PasswordHash: hash})
 
 	notes = append(notes, fmt.Sprintf("demo password for all users: %s", demoPassword))
 	return notes, nil
